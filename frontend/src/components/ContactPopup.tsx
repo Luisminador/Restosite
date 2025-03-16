@@ -1,31 +1,16 @@
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 
 const ContactPopup = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (isSubmitted && countdown === null) {
-      setCountdown(59);
-    }
-
-    if (countdown !== null && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isSubmitted, countdown]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3000/callback-request', {
+      const response = await fetch('http://localhost:3001/callback-request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,7 +19,6 @@ const ContactPopup = () => {
       });
 
       const data = await response.json();
-      console.log('Svar från server:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Något gick fel');
@@ -45,12 +29,6 @@ const ContactPopup = () => {
       console.error('Fel vid anrop:', err);
       setError('Kunde inte skicka förfrågan. Försök igen senare.');
     }
-  };
-
-  const getStatusMessage = () => {
-    if (countdown === null) return '';
-    if (countdown === 0) return 'Agent ansluter nu!';
-    return `Agent ansluter om ${countdown} sekunder...`;
   };
 
   return (
@@ -87,23 +65,11 @@ const ContactPopup = () => {
       ) : (
         <div className="text-center">
           <div className="animate-pulse text-lg font-medium text-gray-900">
-            {getStatusMessage()}
+            Agent ansluter...
           </div>
           <div className="mt-2 text-sm text-gray-500">
-            {countdown === 0 ? (
-              'Tack för ditt tålamod!'
-            ) : (
-              'Vi uppskattar ditt tålamod'
-            )}
+            Vi återkommer inom kort
           </div>
-          {countdown !== null && countdown > 0 && (
-            <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-1000 ease-linear"
-                style={{ width: `${(countdown / 59) * 100}%` }}
-              />
-            </div>
-          )}
         </div>
       )}
     </div>
